@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="drivers-connector">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/drivers-connector" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/drivers-connector" recursive="false" />
+  </library>
+</component>
