@@ -5,16 +5,16 @@ import java.awt.*;
 
 public class MainFrame {
     MainFrame(){
+
         JFrame GUI = new JFrame("Taller Mecanico");
+        Pestaña ventanaPdeVenta = new Pestaña();
+
         GUI.setLayout(null);
         GUI.setSize(1920,1080);
-
-        Pestaña ventanaPdeVenta = new Pestaña();
-        GUI.add(ventanaPdeVenta.panel);
-
-        ventanaPdeVenta.panel.setBounds(0,0,1920,1080);
-        GUI.getContentPane().setBackground(Color.decode("#023047"));
+        GUI.setBackground(Color.white);
         GUI.setVisible(true);
+
+        GUI.add(ventanaPdeVenta.MainPanel);
 
     }
     public static void main (String []args){
