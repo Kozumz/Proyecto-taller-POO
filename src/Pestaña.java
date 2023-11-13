@@ -23,12 +23,20 @@ import static src.MiniaturasCompra.Etiqueta;
 public class  Pestaña {
     //region Variables
     public String DbName = "dbtaller",DbTable = "inventarioproductos";
-    public int Total;
+    public int Total, AntiCant = 0,
+            AroCant = 0,LTapCant = 0, LParCant = 0,
+            EspCant = 0, GelCant = 0;
     //endregion
 
     //region elementos graficos
     JPanel panel,MainPanel;
     JPanel panelCompras = new JPanel(null);
+    JLabel AntiVenta = new JLabel(),
+            AroVEnta = new JLabel(),
+            LTapVenta = new JLabel(),
+            LParVenta = new JLabel(),
+            EspVenta = new JLabel(),
+            GelVenta = new JLabel();
     JScrollPane scrollPane;
     JTextField TotalTf = new JTextField();
     Producto NuevoProducto = new Producto();
@@ -249,22 +257,23 @@ public class  Pestaña {
 
                     //Evento de mouse para agregar producto
                     AgregarProductoP1.addMouseListener(new MouseAdapter() {
-                        static int AntiCant = 1;
-                        int auxTotal=0;
-                        JLabel Info = new JLabel();
+
                         @Override
                         public void mouseClicked(MouseEvent e) {
-                            panelCompras.remove(Info);
                             FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"1");
-                            Info = new JLabel(NuevoProducto.NombreDeProducto + " x " + AntiCant);
-                            Info.setFont(Aptos);
-                            Info.setBounds(15,15,300,50);
-                            panelCompras.add(Info);
-                            panelCompras.repaint();
-                            //auxTotal = auxTotal+NuevoProducto.Precio;
-                            Total = Total + NuevoProducto.Precio;
-                            TotalTf.setText(Integer.toString(Total));
-                            AntiCant++;
+                            if (NuevoProducto.Existencias>AntiCant) {
+                                    AntiCant++;
+                                    AntiVenta.setText(NuevoProducto.NombreDeProducto + " x " + AntiCant);
+                                    AntiVenta.setFont(Aptos);
+                                    AntiVenta.setBounds(15, 15, 300, 50);
+                                    panelCompras.add(AntiVenta);
+                                    panelCompras.repaint();
+                                    Total = Total + NuevoProducto.Precio;
+                                    TotalTf.setText(Integer.toString(Total));
+                                }
+                            else{
+                                JOptionPane.showConfirmDialog(MainPanel,"No hay inventario suficiente");
+                            }
                         }
                         public void mouseEntered(MouseEvent e) {
                             // Cambiar la apariencia cuando el mouse entra
@@ -296,9 +305,24 @@ public class  Pestaña {
                 JLabel EliminarProductoP1 = new JLabel(new ImageIcon(EpRc));
 
                 EliminarProductoP1.addMouseListener(new MouseAdapter() {
+                    //JLabel Info = new JLabel();
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        System.out.println("Agregado");
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"1");
+                        if(AntiCant>=1) {
+                            AntiCant--;
+                            if (AntiCant==0){
+                                AntiVenta.setText("");
+                                Total = Total - NuevoProducto.Precio;
+                                TotalTf.setText(Integer.toString(Total));
+                                panelCompras.repaint();
+                                return;
+                            }
+                            Total = Total - NuevoProducto.Precio;
+                            TotalTf.setText(Integer.toString(Total));
+                            AntiVenta.setText(NuevoProducto.NombreDeProducto + " x " + AntiCant);
+                            panelCompras.repaint();
+                        }
                     }
                     public void mouseEntered(MouseEvent e) {
                         // Cambiar la apariencia cuando el mouse entra
@@ -839,6 +863,5 @@ public class  Pestaña {
         //endregion
 
     }
-
 
 }
