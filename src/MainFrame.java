@@ -21,3 +21,10 @@ public class MainFrame {
          MainFrame M  = new MainFrame();
     }
 }
+
+/*Anticongelante ok
+    Aromatizante ok
+    Esponjas Tap, ok
+    Gel noOK
+
+ */
