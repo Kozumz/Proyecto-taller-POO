@@ -1,62 +1,90 @@
 package src;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.event.*;
-import  javax.swing.*;
-import java.awt.*;
+
+import org.apache.pdfbox.jbig2.decoder.arithmetic.CX;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+
 import javax.imageio.ImageIO;
-import javax.swing.plaf.basic.BasicBorders;
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import java.awt.*;
 import java.awt.event.*;
-import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
-import static src.MiniaturasCompra.Etiqueta;
-
-//import static src.MiniaturasCompra.*;
-
+import static src.FuncionesSQL.NuevaConexion;
 
 public class  Pestaña {
     //region Variables
     public String DbName = "dbtaller",DbTable = "inventarioproductos";
     public int Total, AntiCant = 0,
             AroCant = 0,LTapCant = 0, LParCant = 0,
-            EspCant = 0, GelCant = 0;
+            EspCant = 0, GelCant = 0,
+            NumDeVenta = 0,NewInv;
+    public static boolean Check = false;
     //endregion
 
     //region elementos graficos
-    JPanel panel,MainPanel;
-    JPanel panelCompras = new JPanel(null);
-    JLabel AntiVenta = new JLabel(),
-            AroVEnta = new JLabel(),
-            LTapVenta = new JLabel(),
-            LParVenta = new JLabel(),
-            EspVenta = new JLabel(),
-            GelVenta = new JLabel();
+    JPanel panel,MainPanel,gifPanel;
+    Container panelCompras = new JPanel();
+    BoxLayout Bl = new BoxLayout(panelCompras,BoxLayout.Y_AXIS);
+
+    JLabel AntiVenta = new JLabel(""),
+            AroVEnta = new JLabel(""),
+            LTapVenta = new JLabel(""),
+            LParVenta = new JLabel(""),
+            EspVenta = new JLabel(""), GelVenta = new JLabel("");
     JScrollPane scrollPane;
     JTextField TotalTf = new JTextField();
-    Producto NuevoProducto = new Producto();
     SpringLayout Spl = new SpringLayout();
-    BoxLayout Bl = new BoxLayout(panel,BoxLayout.Y_AXIS);
+    Producto NuevoProducto = new Producto();
 
 
     Font Impact = new Font("Impact", Font.PLAIN,50);
     Font Aptos = new Font("Aptos",Font.ITALIC,18);
-    Font GrayImpact = Impact.deriveFont(Collections.singletonMap(TextAttribute.FOREGROUND,Color.decode("#E0E0E0")));
+    Font VentaFont = new Font("Yu Gothic",Font.ITALIC,12);
 
     Border BordeLinea = BorderFactory.createEmptyBorder(); //createEtchedBorder(EtchedBorder.RAISED);
     Border blackline = BorderFactory.createLineBorder(Color.black);
+    Border vacio = BorderFactory.createEmptyBorder(0,80,0,80);
+    Border CompBorde = new CompoundBorder(blackline,vacio);
     //endregion
     //Constructor para la pestaña
     Pestaña() {
+
+        try {
+            NuevaConexion = DriverManager.getConnection("jdbc:mysql://localhost/"+ DbName,"root","");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         //region Panel de productos
         //region Setteo paneles
         panel = new JPanel(null);
+        MainPanel = new JPanel(null);
         panel.setBackground(Color.white);
+        panelCompras.setLayout(Bl);
+        panelCompras.setBounds(1550,150,300,680 );
+        gifPanel = new JPanel();
+        gifPanel.setSize(300,300);
+        gifPanel.setLayout(new BorderLayout());
+
+
+        panelCompras.add(AntiVenta);
+        panelCompras.add(AroVEnta);
+        panelCompras.add(LTapVenta);
+        panelCompras.add(LParVenta);
+        panelCompras.add(EspVenta);
+        panelCompras.add(GelVenta);
+        panelCompras.add(gifPanel);
 
         //Definir paneles superiores y paneles inferiores con SpringLayout
         JPanel p1 = new JPanel(Spl);
@@ -85,6 +113,31 @@ public class  Pestaña {
 
         //panel.setBounds(200,120,1800,1500);
         panel.setPreferredSize(new Dimension(1800,1100));
+        //endregion
+
+        //region Formato labels de articulos
+        AntiVenta.setFont(VentaFont);
+        AroVEnta.setFont(VentaFont);
+        LTapVenta.setFont(VentaFont);
+        LParVenta.setFont(VentaFont);
+        EspVenta.setFont(VentaFont);
+        GelVenta.setFont(VentaFont);
+
+
+        AntiVenta.setAlignmentX(Component.CENTER_ALIGNMENT);
+        AroVEnta.setAlignmentX(Component.CENTER_ALIGNMENT);
+        LTapVenta.setAlignmentX(Component.CENTER_ALIGNMENT);
+        LParVenta.setAlignmentX(Component.CENTER_ALIGNMENT);
+        EspVenta.setAlignmentX(Component.CENTER_ALIGNMENT);
+        GelVenta.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        AntiVenta.setBorder(CompBorde);
+        AroVEnta.setBorder(CompBorde);
+        LTapVenta.setBorder(CompBorde);
+        LParVenta.setBorder(CompBorde);
+        EspVenta.setBorder(CompBorde);
+        GelVenta.setBorder(CompBorde);
+
         //endregion
 
         //region Imagenes de los productos
@@ -239,12 +292,13 @@ public class  Pestaña {
         FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"1");
             //Definir texto de los paneles superiores
             JTextArea InfoP1 = new JTextArea(NuevoProducto.Descripcion);
+            InfoP1.setCaretColor(InfoP1.getBackground());
             InfoP1.setSize(310,50);
             InfoP1.setFont(Aptos);
             InfoP1.setEditable(false);
 
             //region Label precio
-            JLabel PrecioP1 = new JLabel("$"+NuevoProducto.Precio);
+            JLabel PrecioP1 = new JLabel("$ "+NuevoProducto.Precio);
             PrecioP1.setFont(Impact);
             Spl.putConstraint(SpringLayout.NORTH,PrecioP1,0,SpringLayout.NORTH,InfoP1);
             //endregion
@@ -257,30 +311,32 @@ public class  Pestaña {
 
                     //Evento de mouse para agregar producto
                     AgregarProductoP1.addMouseListener(new MouseAdapter() {
-
+                        boolean FirstClick = true;
                         @Override
                         public void mouseClicked(MouseEvent e) {
-                            FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"1");
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"1");
                             if (NuevoProducto.Existencias>AntiCant) {
-                                    AntiCant++;
-                                    AntiVenta.setText(NuevoProducto.NombreDeProducto + " x " + AntiCant);
-                                    AntiVenta.setFont(Aptos);
-                                    AntiVenta.setBounds(15, 15, 300, 50);
-                                    panelCompras.add(AntiVenta);
-                                    panelCompras.repaint();
-                                    Total = Total + NuevoProducto.Precio;
-                                    TotalTf.setText(Integer.toString(Total));
-                                }
-                            else{
-                                JOptionPane.showConfirmDialog(MainPanel,"No hay inventario suficiente");
+                            AntiCant++;
+                            if(FirstClick==true) {
+                                panelCompras.add(Box.createRigidArea(new Dimension(0, 10)));
+                                AntiVenta.setText(NuevoProducto.NombreDeProducto + " x " + AntiCant);
+                                panelCompras.repaint();
                             }
+                            AntiVenta.setText(NuevoProducto.NombreDeProducto + " x " + AntiCant);
+                            panelCompras.repaint();
+                            FirstClick =false;
+                            Total = Total + NuevoProducto.Precio;
+                            TotalTf.setText("$ " + Integer.toString(Total));
                         }
+                            else{
+                            JOptionPane.showMessageDialog(MainPanel,"No hay inventario suficiente");
+                        }
+                    }
                         public void mouseEntered(MouseEvent e) {
                             // Cambiar la apariencia cuando el mouse entra
                             AgregarProductoP1.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                             AgregarProductoP1.setBorder(BorderFactory.createLineBorder(Color.decode("#FFAC94"), 1));
                         }
-
                         @Override
                         public void mouseExited(MouseEvent e) {
                             // Restaurar la apariencia cuando el mouse sale
@@ -314,12 +370,12 @@ public class  Pestaña {
                             if (AntiCant==0){
                                 AntiVenta.setText("");
                                 Total = Total - NuevoProducto.Precio;
-                                TotalTf.setText(Integer.toString(Total));
+                                TotalTf.setText("$ "+Integer.toString(Total));
                                 panelCompras.repaint();
                                 return;
                             }
                             Total = Total - NuevoProducto.Precio;
-                            TotalTf.setText(Integer.toString(Total));
+                            TotalTf.setText("$ "+Integer.toString(Total));
                             AntiVenta.setText(NuevoProducto.NombreDeProducto + " x " + AntiCant);
                             panelCompras.repaint();
                         }
@@ -361,11 +417,12 @@ public class  Pestaña {
         FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"2");
             //Definir texto de los paneles superiores
             JTextArea Infop2 = new JTextArea(NuevoProducto.Descripcion);
+            Infop2.setCaretColor(InfoP1.getBackground());
             Infop2.setSize(320,50);
             Infop2.setFont(Aptos);
             Infop2.setEditable(false);
 
-            JLabel PrecioP2 = new JLabel("$"+NuevoProducto.Precio);
+            JLabel PrecioP2 = new JLabel("$ "+NuevoProducto.Precio);
             PrecioP2.setFont(Impact);
             Spl.putConstraint(SpringLayout.NORTH,PrecioP2,0,SpringLayout.NORTH,Infop2);
 
@@ -377,22 +434,26 @@ public class  Pestaña {
                 JLabel AgregarProductoP1 = new JLabel(new ImageIcon(ApRc));
 
                 AgregarProductoP1.addMouseListener(new MouseAdapter() {
-                    static int AroCant = 1;
-                    int auxTotal;
-                    JLabel Info = new JLabel();
+                    boolean FirstClick = true;
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        panelCompras.remove(Info);
                         FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"2");
-                        Info = new JLabel(NuevoProducto.NombreDeProducto + " x " + AroCant);
-                        Info.setFont(Aptos);
-                        Info.setBounds(15,15,300,50);
-                        panelCompras.add(Info);
-                        panelCompras.repaint();
-                        //auxTotal = NuevoProducto.Precio+auxTotal;
-                        Total = Total + NuevoProducto.Precio;
-                        TotalTf.setText(Integer.toString(Total));
-                        AroCant++;
+                        if (NuevoProducto.Existencias>AroCant) {
+                            AroCant++;
+                            if(FirstClick==true) {
+                                panelCompras.add(Box.createRigidArea(new Dimension(0, 10)));
+                                AroVEnta.setText(NuevoProducto.NombreDeProducto + " x " + AroCant);
+                                panelCompras.repaint();
+                            }
+                            AroVEnta.setText(NuevoProducto.NombreDeProducto + " x " + AroCant);
+                            panelCompras.repaint();
+                            FirstClick =false;
+                            Total = Total + NuevoProducto.Precio;
+                            TotalTf.setText("$ " + Integer.toString(Total));
+                        }
+                        else{
+                            JOptionPane.showMessageDialog(MainPanel,"No hay inventario suficiente");
+                        }
 
                     }
                     public void mouseEntered(MouseEvent e) {
@@ -427,7 +488,21 @@ public class  Pestaña {
                 EliminarProductoP1.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        System.out.println("Agregado");
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"2");
+                        if(AroCant>=1) {
+                            AroCant--;
+                            if (AroCant==0){
+                                AroVEnta.setText("");
+                                Total = Total - NuevoProducto.Precio;
+                                TotalTf.setText("$ "+Integer.toString(Total));
+                                panelCompras.repaint();
+                                return;
+                            }
+                            Total = Total - NuevoProducto.Precio;
+                            TotalTf.setText("$ " + Integer.toString(Total));
+                            AroVEnta.setText(NuevoProducto.NombreDeProducto + " x " + AroCant);
+                            panelCompras.repaint();
+                        }
                     }
                     public void mouseEntered(MouseEvent e) {
                         // Cambiar la apariencia cuando el mouse entra
@@ -463,16 +538,18 @@ public class  Pestaña {
         //endregion
 
         //region Diseño panel info esponjas
-        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"3");
+        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"5");
             //Definir texto de los paneles superiores
             JTextArea InfoP3 = new JTextArea(NuevoProducto.Descripcion);
+            InfoP3.setCaretColor(InfoP1.getBackground());
             InfoP3.setSize(320,50);
             InfoP3.setFont(Aptos);
             InfoP3.setEditable(false);
 
-            JLabel PrecioP3 = new JLabel("$"+NuevoProducto.Precio);
+            JLabel PrecioP3 = new JLabel("$ "+NuevoProducto.Precio);
             PrecioP3.setFont(Impact);
             Spl.putConstraint(SpringLayout.NORTH,PrecioP3,0,SpringLayout.NORTH,InfoP3);
+
             //region Boton agregar producto
             try
             {
@@ -481,9 +558,26 @@ public class  Pestaña {
                 JLabel AgregarProductoP1 = new JLabel(new ImageIcon(ApRc));
 
                 AgregarProductoP1.addMouseListener(new MouseAdapter() {
+                    boolean FirstClick = true;
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        System.out.println("Agregado");
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"5");
+                        if (NuevoProducto.Existencias>EspCant) {
+                            EspCant++;
+                            if(FirstClick==true) {
+                                panelCompras.add(Box.createRigidArea(new Dimension(0, 10)));
+                                EspVenta.setText(NuevoProducto.NombreDeProducto + " x " + EspCant);
+                                panelCompras.repaint();
+                            }
+                            EspVenta.setText(NuevoProducto.NombreDeProducto + " x " + EspCant);
+                            panelCompras.repaint();
+                            FirstClick =false;
+                            Total = Total + NuevoProducto.Precio;
+                            TotalTf.setText("$ "+Integer.toString(Total));
+                        }
+                        else{
+                            JOptionPane.showMessageDialog(MainPanel,"No hay inventario suficiente");
+                        }
                     }
                     public void mouseEntered(MouseEvent e) {
                         // Cambiar la apariencia cuando el mouse entra
@@ -507,7 +601,8 @@ public class  Pestaña {
                 e.printStackTrace();
             }
             //endregion
-            //region Boton eliminar producto
+
+            // region Boton eliminar producto
             try
             {
                 BufferedImage EliminarProducto = ImageIO.read(new File("src/img/icons/Deletebin.png"));
@@ -517,7 +612,21 @@ public class  Pestaña {
                 EliminarProductoP1.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        System.out.println("Agregado");
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"5");
+                        if(EspCant>=1) {
+                            EspCant--;
+                            if (EspCant==0){
+                                EspVenta.setText("");
+                                Total = Total - NuevoProducto.Precio;
+                                TotalTf.setText("$ " + Integer.toString(Total));
+                                panelCompras.repaint();
+                                return;
+                            }
+                            Total = Total - NuevoProducto.Precio;
+                            TotalTf.setText("$ "+Integer.toString(Total));
+                            EspVenta.setText(NuevoProducto.NombreDeProducto + " x " + EspCant);
+                            panelCompras.repaint();
+                        }
                     }
                     public void mouseEntered(MouseEvent e) {
                         // Cambiar la apariencia cuando el mouse entra
@@ -553,16 +662,18 @@ public class  Pestaña {
         //endregion
 
         //region Diseño panel info gel
-        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"4");
+        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"6");
         //Definir texto de los paneles superiores
         JTextArea InfoP4 = new JTextArea(NuevoProducto.Descripcion);
+        InfoP4.setCaretColor(InfoP1.getBackground());
         InfoP4.setSize(320,50);
         InfoP4.setFont(Aptos);
         InfoP4.setEditable(false);
 
-        JLabel PrecioP4 = new JLabel("$"+NuevoProducto.Precio);
+        JLabel PrecioP4 = new JLabel("$ "+NuevoProducto.Precio);
         PrecioP4.setFont(Impact);
         Spl.putConstraint(SpringLayout.NORTH,PrecioP4,0,SpringLayout.NORTH,InfoP4);
+
         //region Boton agregar producto
         try
         {
@@ -571,9 +682,26 @@ public class  Pestaña {
             JLabel AgregarProductoP1 = new JLabel(new ImageIcon(ApRc));
 
             AgregarProductoP1.addMouseListener(new MouseAdapter() {
+                boolean FirstClick = true;
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    System.out.println("Agregado");
+                    FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"6");
+                    if (NuevoProducto.Existencias>GelCant) {
+                        GelCant++;
+                        if(FirstClick==true) {
+                            panelCompras.add(Box.createRigidArea(new Dimension(0, 10)));
+                            GelVenta.setText(NuevoProducto.NombreDeProducto + " x " + GelCant);
+                            panelCompras.repaint();
+                        }
+                        GelVenta.setText(NuevoProducto.NombreDeProducto + " x " + GelCant);
+                        panelCompras.repaint();
+                        FirstClick =false;
+                        Total = Total + NuevoProducto.Precio;
+                        TotalTf.setText("$ "+Integer.toString(Total));
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(MainPanel,"No hay inventario suficiente");
+                    }
                 }
                 public void mouseEntered(MouseEvent e) {
                     // Cambiar la apariencia cuando el mouse entra
@@ -597,7 +725,8 @@ public class  Pestaña {
             e.printStackTrace();
         }
         //endregion
-        //region Boton eliminar producto
+
+        // region Boton eliminar producto
         try
         {
             BufferedImage EliminarProducto = ImageIO.read(new File("src/img/icons/Deletebin.png"));
@@ -607,7 +736,21 @@ public class  Pestaña {
             EliminarProductoP1.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    System.out.println("Agregado");
+                    FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"6");
+                    if(GelCant>=1) {
+                        GelCant--;
+                        if (GelCant==0){
+                            GelVenta.setText("");
+                            Total = Total - NuevoProducto.Precio;
+                            TotalTf.setText("$ "+Integer.toString(Total));
+                            panelCompras.repaint();
+                            return;
+                        }
+                        Total = Total - NuevoProducto.Precio;
+                        TotalTf.setText("$ "+Integer.toString(Total));
+                        GelVenta.setText(NuevoProducto.NombreDeProducto + " x " + GelCant);
+                        panelCompras.repaint();
+                    }
                 }
                 public void mouseEntered(MouseEvent e) {
                     // Cambiar la apariencia cuando el mouse entra
@@ -643,14 +786,15 @@ public class  Pestaña {
         //endregion
 
         //region Diseño panel info limpiador tapiceria
-        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"5");
+        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"3");
         //Definir texto de los paneles superiores
         JTextArea InfoP5 = new JTextArea(NuevoProducto.Descripcion);
+        InfoP5.setCaretColor(InfoP1.getBackground());
         InfoP5.setSize(320,50);
         InfoP5.setFont(Aptos);
         InfoP5.setEditable(false);
 
-        JLabel PrecioP5 = new JLabel("$"+NuevoProducto.Precio);
+        JLabel PrecioP5 = new JLabel("$ "+NuevoProducto.Precio);
         PrecioP5.setFont(Impact);
         Spl.putConstraint(SpringLayout.NORTH,PrecioP5,0,SpringLayout.NORTH,InfoP5);
 
@@ -662,9 +806,26 @@ public class  Pestaña {
             JLabel AgregarProductoP1 = new JLabel(new ImageIcon(ApRc));
 
             AgregarProductoP1.addMouseListener(new MouseAdapter() {
+                 boolean FirstClick = true;
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    System.out.println("Agregado");
+                    FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"3");
+                    if (NuevoProducto.Existencias>LTapCant) {
+                        LTapCant++;
+                        if(FirstClick==true) {
+                            panelCompras.add(Box.createRigidArea(new Dimension(0, 10)));
+                            LTapVenta.setText(NuevoProducto.NombreDeProducto + " x " + LTapCant);
+                            panelCompras.repaint();
+                        }
+                        LTapVenta.setText(NuevoProducto.NombreDeProducto + " x " + LTapCant);
+                        panelCompras.repaint();
+                        FirstClick =false;
+                        Total = Total + NuevoProducto.Precio;
+                        TotalTf.setText("$ "+Integer.toString(Total));
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(MainPanel,"No hay inventario suficiente");
+                    }
                 }
                 public void mouseEntered(MouseEvent e) {
                     // Cambiar la apariencia cuando el mouse entra
@@ -688,6 +849,7 @@ public class  Pestaña {
             e.printStackTrace();
         }
         //endregion
+
         //region Boton eliminar producto
         try
         {
@@ -698,7 +860,21 @@ public class  Pestaña {
             EliminarProductoP1.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    System.out.println("Agregado");
+                    FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"3");
+                    if(LTapCant>=1) {
+                        LTapCant--;
+                        if (LTapCant==0){
+                            LTapVenta.setText("");
+                            Total = Total - NuevoProducto.Precio;
+                            TotalTf.setText("$ "+Integer.toString(Total));
+                            panelCompras.repaint();
+                            return;
+                        }
+                        Total = Total - NuevoProducto.Precio;
+                        TotalTf.setText("$ "+Integer.toString(Total));
+                        LTapVenta.setText(NuevoProducto.NombreDeProducto + " x " + LTapCant);
+                        panelCompras.repaint();
+                    }
                 }
                 public void mouseEntered(MouseEvent e) {
                     // Cambiar la apariencia cuando el mouse entra
@@ -733,14 +909,15 @@ public class  Pestaña {
         //endregion
 
         //region Diseño panel info limpiaparabrisas
-        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"6");
+        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"4");
         //Definir texto de los paneles superiores
         JTextArea InfoP6 = new JTextArea(NuevoProducto.Descripcion);
+        InfoP6.setCaretColor(InfoP1.getBackground());
         InfoP6.setSize(320,50);
         InfoP6.setFont(Aptos);
         InfoP6.setEditable(false);
 
-        JLabel PrecioP6 = new JLabel("$"+NuevoProducto.Precio);
+        JLabel PrecioP6 = new JLabel("$ "+NuevoProducto.Precio);
         PrecioP6.setFont(Impact);
         Spl.putConstraint(SpringLayout.NORTH,PrecioP6,0,SpringLayout.NORTH,InfoP6);
 
@@ -752,9 +929,26 @@ public class  Pestaña {
             JLabel AgregarProductoP1 = new JLabel(new ImageIcon(ApRc));
 
             AgregarProductoP1.addMouseListener(new MouseAdapter() {
+                boolean FirstClick = true;
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    System.out.println("Agregado");
+                    FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"4");
+                    if (NuevoProducto.Existencias>LParCant) {
+                        LParCant++;
+                        if(FirstClick==true) {
+                            panelCompras.add(Box.createRigidArea(new Dimension(0, 10)));
+                            LParVenta.setText(NuevoProducto.NombreDeProducto + " x " + LParCant);
+                            panelCompras.repaint();
+                        }
+                        LParVenta.setText(NuevoProducto.NombreDeProducto + " x " + LParCant);
+                        panelCompras.repaint();
+                        FirstClick =false;
+                        Total = Total + NuevoProducto.Precio;
+                        TotalTf.setText("$ "+Integer.toString(Total));
+                    }
+                    else{
+                        JOptionPane.showMessageDialog(MainPanel,"No hay inventario suficiente");
+                    }
                 }
                 public void mouseEntered(MouseEvent e) {
                     // Cambiar la apariencia cuando el mouse entra
@@ -778,6 +972,7 @@ public class  Pestaña {
             e.printStackTrace();
         }
         //endregion
+
         //region Boton eliminar producto
         try
         {
@@ -788,7 +983,21 @@ public class  Pestaña {
             EliminarProductoP1.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    System.out.println("Agregado");
+                    FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"4");
+                    if(LParCant>=1) {
+                        LParCant--;
+                        if (LParCant==0){
+                            LParVenta.setText("");
+                            Total = Total - NuevoProducto.Precio;
+                            TotalTf.setText("$ "+Integer.toString(Total));
+                            panelCompras.repaint();
+                            return;
+                        }
+                        Total = Total - NuevoProducto.Precio;
+                        TotalTf.setText("$ "+Integer.toString(Total));
+                        LParVenta.setText(NuevoProducto.NombreDeProducto + " x " + LParCant);
+                        panelCompras.repaint();
+                    }
                 }
                 public void mouseEntered(MouseEvent e) {
                     // Cambiar la apariencia cuando el mouse entra
@@ -823,6 +1032,141 @@ public class  Pestaña {
 
         //endregion
 
+        //region Imagen Carrito
+        try {
+            BufferedImage Carrrito = ImageIO.read(new File("src/img/shopping_cart.png"));
+            Image c = Carrrito.getScaledInstance(80,80,Image.SCALE_SMOOTH);
+
+            JLabel CarritoImg = new JLabel(new ImageIcon(c));
+
+            CarritoImg.setBounds(1550,840,80,80);
+            MainPanel.add(CarritoImg);
+
+            //region acciones click
+            CarritoImg.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    JOptionPane.showMessageDialog(MainPanel,"Compra realizada, guardando ticket");
+                    NumDeVenta ++;
+                    PDDocument nuevoTicket = new PDDocument();
+                    PDPage nuevaPagina = new PDPage();
+                    try {
+
+                    nuevoTicket.addPage(nuevaPagina);
+
+                        PDPageContentStream stream = new PDPageContentStream(nuevoTicket,nuevaPagina);
+                        PDFont font = PDType1Font.HELVETICA;
+                        PDFont fuenteTotal = PDType1Font.TIMES_BOLD;
+                        stream.setFont(font,24);
+
+                        int fontSize = 15;
+                        int yStart = (int) nuevaPagina.getMediaBox().getHeight() - 20;
+                        int margin = 150;
+
+                        stream.setFont(font, fontSize);
+                        stream.beginText();
+                        stream.newLineAtOffset(margin, yStart);
+                        stream.showText(AntiVenta.getText());
+                        stream.newLineAtOffset(0, -fontSize);
+                        stream.showText(AroVEnta.getText());
+                        stream.newLineAtOffset(0, -fontSize);
+                        stream.showText(LTapVenta.getText());
+                        stream.newLineAtOffset(0, -fontSize);
+                        stream.showText(LParVenta.getText());
+                        stream.newLineAtOffset(0, -fontSize);
+                        stream.showText(EspVenta.getText());
+                        stream.newLineAtOffset(0, -fontSize);
+                        stream.showText(GelVenta.getText());
+                        stream.setFont(fuenteTotal,25);
+                        stream.newLineAtOffset(0,-30);
+                        stream.showText(TotalTf.getText());
+                        stream.endText();
+                        stream.close();
+                        nuevoTicket.save("Tickets\\Ticket_N" + NumDeVenta+".pdf");
+                        nuevoTicket.close();
+
+
+
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                        NewInv = 0;
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"1");
+                        JOptionPane.showMessageDialog(MainPanel,NuevoProducto.Existencias);
+                        NewInv = NuevoProducto.Existencias - AntiCant;
+                        JOptionPane.showMessageDialog(MainPanel,NewInv);
+                        FuncionesSQL.ActualizarExistencias(DbName,DbTable,"1",NewInv);
+
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"2");
+                        NewInv = NuevoProducto.Existencias - AroCant;
+                        FuncionesSQL.ActualizarExistencias(DbName,DbTable,"2",NewInv);
+
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"3");
+                        NewInv = NuevoProducto.Existencias - LTapCant;
+                        FuncionesSQL.ActualizarExistencias(DbName,DbTable,"3",NewInv);
+
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"4");
+                        NewInv = NuevoProducto.Existencias - LParCant;
+                        FuncionesSQL.ActualizarExistencias(DbName,DbTable,"4",NewInv);
+
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"5");
+                        NewInv = NuevoProducto.Existencias - EspCant;
+                        FuncionesSQL.ActualizarExistencias(DbName,DbTable,"5",NewInv);
+
+                        FuncionesSQL.LeerDeBase(DbName,DbTable,NuevoProducto,"6");
+                        NewInv = NuevoProducto.Existencias - GelCant;
+                        FuncionesSQL.ActualizarExistencias(DbName,DbTable,"6",NewInv);
+
+                        AntiCant = 0; AroCant = 0;LTapCant = 0;LParCant = 0; EspCant = 0; GelCant = 0;
+                        /*
+                        panelCompras.remove(AntiVenta);
+                        panelCompras.remove(AroVEnta);
+                        panelCompras.remove(LTapVenta);
+                        panelCompras.remove(LParVenta);
+                        panelCompras.remove(EspVenta);
+                        panelCompras.remove(GelVenta);
+                        panelCompras.remove(TotalTf);
+                        */
+
+                        mostrarGif(gifPanel);
+                        AntiVenta.setText("");
+                        AroVEnta.setText("");
+                        LTapVenta.setText("");
+                        LParVenta.setText("");
+                        EspVenta.setText("");
+                        GelVenta.setText("");
+
+
+
+                        Check = true;
+
+                        Total = 0;
+                        TotalTf.setText("$ 0");
+                        panelCompras.repaint();
+                }
+
+                public void mouseEntered(MouseEvent e) {
+                    // Cambiar la apariencia cuando el mouse entra
+                    CarritoImg.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    CarritoImg.setBorder(BorderFactory.createLineBorder(Color.white, 5));
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    // Restaurar la apariencia cuando el mouse sale
+                    CarritoImg.setCursor(Cursor.getDefaultCursor());
+                    CarritoImg.setBorder(null);
+                }
+
+
+            });
+            //endregion
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        //endregion
+
         //region Panel/scrollpane
         //agregar Subpaneles a scrollpane
         panel.add(p1);panel.add(p2);panel.add(p3);panel.add(p4);panel.add(p5);panel.add(p6);
@@ -847,21 +1191,51 @@ public class  Pestaña {
         //endregion
 
         TotalTf = new JTextField();
-        TotalTf.setBounds(100,700,190,70);
         TotalTf.setFont(Impact);
         TotalTf.setEditable(false);
+        TotalTf.setBounds(1650,840,200,80);
 
-        panelCompras.setBounds(1550,150,300,780);
-        panelCompras.add(TotalTf);
 
         //region Configurar panel principal
-        MainPanel = new JPanel(null);
         MainPanel.setBackground(Color.decode("#FF8764"));
         MainPanel.setSize(1920,1080);
         MainPanel.add(scrollPane);
         MainPanel.add(panelCompras);
+        MainPanel.add(TotalTf);
         //endregion
 
+    }
+
+    private static void mostrarGif(JPanel gifPanel) {
+        try {
+            // URL del GIF
+            URL gifUrl = new URL("https://media.giphy.com/media/pHXNzcgU98fgRE2aOn/giphy.gif");
+            ImageIcon gifIcon = new ImageIcon(gifUrl);
+
+            // Ajusta el tamaño del GIF (por ejemplo, a 200x200 píxeles)
+            Image resizedGif = gifIcon.getImage().getScaledInstance(250, 250, Image.SCALE_DEFAULT);
+            ImageIcon resizedGifIcon = new ImageIcon(resizedGif);
+
+            // Crea el JLabel con el GIF ajustado en tamaño
+            JLabel gifLabel = new JLabel(resizedGifIcon);
+            gifPanel.add(gifLabel, BorderLayout.CENTER);
+
+            // Programa un temporizador para ocultar el GIF después de 3 segundos
+            Timer timer = new Timer(2000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    gifPanel.remove(gifLabel);
+                    gifPanel.revalidate();
+                    gifPanel.repaint();
+                }
+            });
+
+            // Inicia el temporizador
+            timer.setRepeats(false);
+            timer.start();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 
 }
