@@ -1,0 +1,1 @@
+Nombre: Josue M, Compras: , Costo por hora de mano de obra: 123.0, Horas de trabajo: 12, Costo de las piezas: 10.0, Costo de los productos: 0.0, Cotización total: 1486.0
