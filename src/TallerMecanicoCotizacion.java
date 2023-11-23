@@ -8,8 +8,11 @@ import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.Map;
+
+import static src.FuncionesSQL.NuevaConexion;
 
 public class TallerMecanicoCotizacion {
 
@@ -202,6 +205,7 @@ public class TallerMecanicoCotizacion {
 
         // Guardar la información en el archivo "cotizaciones.txt"
         guardarInformacionEnArchivo("cotizaciones.txt", nombre, compras.toString(), costoHora, horasTrabajo, costoPiezas, costoProductos, costoTotal);
+        guardarEnBaseDeDatos(nombre, costoTotal);
     }
 
     private double calcularCostoTotal(double costoHora, int horasTrabajo, double costoPiezas, double costoProductos) {
@@ -222,6 +226,21 @@ public class TallerMecanicoCotizacion {
                     ", Costo de los productos: " + costoProductos +
                     ", Cotización total: " + costoTotal + "\n");
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void guardarEnBaseDeDatos(String nombre, double costoTotal) {
+
+        try {
+            String query = "INSERT INTO cotizaciones (NombreCliente,TotalCot) VALUES (?, ?)";
+
+            try (PreparedStatement preparedStatement = NuevaConexion.prepareStatement(query)) {
+                preparedStatement.setString(1, nombre);
+                preparedStatement.setDouble(2, costoTotal);
+
+                preparedStatement.executeUpdate();
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -1,0 +1,2 @@
+Nombre: Josue M, Compras: , Costo por hora de mano de obra: 123.0, Horas de trabajo: 12, Costo de las piezas: 10.0, Costo de los productos: 0.0, Cotización total: 1486.0
+Nombre: Josue M, Compras: Aceite de motor (3 unidades), Batería (4 unidades), Filtro de aceite (3 unidades), , Costo por hora de mano de obra: 120.0, Horas de trabajo: 6, Costo de las piezas: 500.0, Costo de los productos: 290.0, Cotización total: 1510.0

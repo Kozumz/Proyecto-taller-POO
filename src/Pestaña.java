@@ -1,4 +1,5 @@
 package src;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -19,8 +20,6 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static src.MainFrame.GUI;
-
 public class Pestaña  {
     //region Variables
     public String DbName = "dbtaller", DbTable = "inventarioproductos";
@@ -34,7 +33,7 @@ public class Pestaña  {
     //endregion
 
     //region elementos graficos
-    JPanel panel, MainPanel, gifPanel;
+    JPanel panel, MainPanel, gifPanel, PanelDerecho = new JPanel();
     JPanel panelCompras = new JPanel();
     BoxLayout Bl = new BoxLayout(panelCompras, BoxLayout.Y_AXIS);
 
@@ -65,7 +64,10 @@ public class Pestaña  {
         MainPanel = new JPanel(null);
         panel.setBackground(Color.white);
         panelCompras.setLayout(Bl);
-        //panelCompras.setBounds(1550, 150, 300, 680);
+        PanelDerecho.setLayout(new BorderLayout());
+        PanelDerecho.setBackground(Color.decode("#FF8764"));
+        panelCompras.setBounds(0, 0, 300, 680);
+        panelCompras.setPreferredSize(new Dimension(300, 680));
         panelCompras.setBorder(BorderFactory.createLineBorder(Color.white, 2));
         gifPanel = new JPanel();
         gifPanel.setSize(300, 300);
@@ -280,6 +282,7 @@ public class Pestaña  {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         //endregion
 
         /*
@@ -1045,8 +1048,9 @@ public class Pestaña  {
 
             JLabel CarritoImg = new JLabel(new ImageIcon(c));
 
-            CarritoImg.setBounds(1550, 840, 80, 80);
-            GUI.add(CarritoImg);
+            CarritoImg.setBounds(0, 840, 80, 80);
+            CarritoImg.setPreferredSize(new Dimension(80, 80));
+            PanelDerecho.add(CarritoImg, BorderLayout.WEST);
 
             //region acciones click
             CarritoImg.addMouseListener(new MouseAdapter() {
@@ -1195,7 +1199,7 @@ public class Pestaña  {
         scrollPane = new JScrollPane(panel);
         scrollPane.setBounds(200, 150, 1300, 780);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPane.setBorder(BorderFactory.createLineBorder(Color.decode("#FFAC94"), 5));
         //endregion
 
@@ -1213,11 +1217,12 @@ public class Pestaña  {
 
         TotalTf.setFont(Impact);
         TotalTf.setEditable(false);
-        TotalTf.setBounds(1650, 840, 200, 80);
+        //TotalTf.setBounds(0, 840, 200, 80);
+        TotalTf.setPreferredSize(new Dimension(200, 80));
 
         JButton GenerarReporte = new JButton("Generar reporte");
-        GUI.add(GenerarReporte)
-                .setBounds(1550,930,300,40);
+        PanelDerecho.add(GenerarReporte, BorderLayout.SOUTH);
+                GenerarReporte.setSize(300,40);
         GenerarReporte.setBackground(Color.white);
         GenerarReporte.setBorder(BorderFactory.createLineBorder(Color.black,1));
 
@@ -1232,8 +1237,8 @@ public class Pestaña  {
         MainPanel.setBackground(Color.decode("#FF8764"));
         MainPanel.setSize(1920, 1080);
         MainPanel.add(scrollPane);
-        MainPanel.add(panelCompras);
-        GUI.add(TotalTf);
+        PanelDerecho.add(panelCompras, BorderLayout.NORTH);
+        PanelDerecho.add(TotalTf, BorderLayout.EAST);
         //endregion
 
     }

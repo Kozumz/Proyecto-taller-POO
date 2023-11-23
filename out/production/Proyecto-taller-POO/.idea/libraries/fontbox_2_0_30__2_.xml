@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="fontbox-2.0.30 (2)">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/pdfBox/fontbox-2.0.30.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
